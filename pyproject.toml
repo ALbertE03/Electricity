@@ -1,0 +1,22 @@
+[project]
+name = "sen"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "dotenv>=0.9.9",
+    "es-core-news-sm",
+    "ipykernel>=7.1.0",
+    "matplotlib>=3.10.8",
+    "nltk>=3.9.2",
+    "numpy>=2.4.1",
+    "pandas>=3.0.0",
+    "pytz>=2025.2",
+    "spacy>=3.8.11",
+    "telethon>=1.42.0",
+    "tqdm>=4.67.1",
+]
+
+[tool.uv.sources]
+es-core-news-sm = { url = "https://github.com/explosion/spacy-models/releases/download/es_core_news_sm-3.8.0/es_core_news_sm-3.8.0-py3-none-any.whl" }
