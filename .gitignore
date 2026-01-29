@@ -10,7 +10,12 @@ wheels/
 .venv
 .env
 
+# telegram session
 *.session
 *.session-journal
 
 *.lock
+
+# OS generated files
+.DS_Store
+**/.DS_Store
