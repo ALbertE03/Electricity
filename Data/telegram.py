@@ -19,7 +19,6 @@ def _get_env(key: str, default: str | None = None):
 
 class ScraperT:
     def __init__(self, group_username: str | None = None, api_id: str | None = None, api_hash: str | None = None, max_workers: int = 5):
-        # Compatibilidad con .env: claves esperadas api_id / api_hash
         self.api_id = api_id or _get_env("api_id")
         self.api_hash = api_hash or _get_env("api_hash")
         if not self.api_id or not self.api_hash:
@@ -28,9 +27,6 @@ class ScraperT:
         self.group_username = group_username or _get_env("tg_group_username", "EmpresaElectricaDeLaHabana")
         self.max_workers = max_workers
         self.semaphore = asyncio.Semaphore(max_workers)
-
-    def check_last_date(self):
-        pass
 
     async def process_message_batch(self, messages_batch, start_of_two_days_ago, end_of_today, extract_all):
         """Procesa un lote de mensajes en paralelo"""
@@ -55,7 +51,7 @@ class ScraperT:
                     if hasattr(message, 'reactions') and message.reactions:
                         if hasattr(message.reactions, 'results') and message.reactions.results:
                             for reaction in message.reactions.results:
-                                if hasattr(reaction, 'reaction'):
+                                if not hasattr(reaction, 'reaction'):
                                     if hasattr(reaction.reaction, 'emoticon'):
                                         reaction_type = reaction.reaction.emoticon
                                     elif hasattr(reaction.reaction, 'document_id'):
@@ -95,7 +91,7 @@ class ScraperT:
             return batch_data
 
     async def download_photo(self, message):
-        """Descarga una foto de manera asíncrona y devuelve la ruta relativa"""
+        """Descarga una foto y devuelve la ruta relativa"""
         try:
             dt = message.date
             year = dt.strftime('%Y')
@@ -126,10 +122,10 @@ class ScraperT:
                 print(f"Conectado a: {entity_type} - {entity.title}")
                 
                 if hasattr(entity, 'restriction_reason') and entity.restriction_reason:
-                    print(f"⚠️ Advertencia: {entity.restriction_reason}")
+                    print(f"Advertencia: {entity.restriction_reason}")
                     
             except Exception as e:
-                print(f"❌ Error al acceder a {self.group_username}: {e}")
+                print(f"Error al acceder a {self.group_username}: {e}")
                 return
             
             monthly_data = defaultdict(list)
@@ -138,12 +134,12 @@ class ScraperT:
                 today = datetime.now(pytz.UTC).date()
                 n_days_ago = today - timedelta(days=n)
                 
-                start_of_two_days_ago = datetime.combine(n_days_ago, datetime.min.time()).replace(tzinfo=pytz.UTC)
+                start_of_n_days_ago = datetime.combine(n_days_ago, datetime.min.time()).replace(tzinfo=pytz.UTC)
                 end_of_today = datetime.combine(today, datetime.max.time()).replace(tzinfo=pytz.UTC)
 
                 print(f"Extrayendo mensajes desde hace {n} días ({n_days_ago.strftime('%Y-%m-%d')}) hasta hoy ({today.strftime('%Y-%m-%d')})")
             else:
-                start_of_two_days_ago = None
+                start_of_n_days_ago = None
                 end_of_today = None
                 print("Extrayendo todos los mensajes del grupo")
             
@@ -165,7 +161,7 @@ class ScraperT:
             ):
                 try:
                     if not extract_all:
-                        if not (start_of_two_days_ago <= message.date <= end_of_today):
+                        if not (start_of_n_days_ago <= message.date <= end_of_today):
                             break
                     
                     message_count += 1
@@ -175,7 +171,7 @@ class ScraperT:
                     if len(messages_batch) >= batch_size:
                         task = self.process_message_batch(
                             messages_batch.copy(), 
-                            start_of_two_days_ago, 
+                            start_of_n_days_ago, 
                             end_of_today, 
                             extract_all
                         )
@@ -201,7 +197,7 @@ class ScraperT:
             if messages_batch:
                 task = self.process_message_batch(
                     messages_batch, 
-                    start_of_two_days_ago, 
+                    start_of_n_days_ago, 
                     end_of_today, 
                     extract_all
                 )
