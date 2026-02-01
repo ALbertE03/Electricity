@@ -28,7 +28,7 @@ class ScraperT:
         self.max_workers = max_workers
         self.semaphore = asyncio.Semaphore(max_workers)
 
-    async def process_message_batch(self, messages_batch, start_of_two_days_ago, end_of_today, extract_all):
+    async def process_message_batch(self, messages_batch, start_of_n_days_ago, end_of_today, extract_all):
         """Procesa un lote de mensajes en paralelo"""
         async with self.semaphore:
             batch_data = defaultdict(list)
@@ -36,7 +36,7 @@ class ScraperT:
             for message in messages_batch:
                 try:
                     if not extract_all:
-                        if not (start_of_two_days_ago <= message.date <= end_of_today):
+                        if not (start_of_n_days_ago <= message.date <= end_of_today):
                             continue
                     
                     year_month = message.date.strftime("%Y-%m")
