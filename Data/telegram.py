@@ -12,23 +12,23 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-def _get_env(key: str, default: str | None = None):
+def _get_env(key: str, default: str | None = None)->str:
     """Lee variables de entorno en minúsculas o mayúsculas."""
     return os.environ.get(key) or os.environ.get(key.upper()) or default
 
 
 class ScraperT:
     def __init__(self, group_username: str | None = None, api_id: str | None = None, api_hash: str | None = None, max_workers: int = 5):
-        self.api_id = api_id or _get_env("api_id")
-        self.api_hash = api_hash or _get_env("api_hash")
+        self.api_id:str = api_id or _get_env("api_id")
+        self.api_hash:str = api_hash or _get_env("api_hash")
         if not self.api_id or not self.api_hash:
             raise ValueError("Configura api_id y api_hash en .env")
 
-        self.group_username = group_username or _get_env("tg_group_username", "EmpresaElectricaDeLaHabana")
-        self.max_workers = max_workers
-        self.semaphore = asyncio.Semaphore(max_workers)
+        self.group_username:str = group_username or _get_env("tg_group_username", "EmpresaElectricaDeLaHabana")
+        self.max_workers:int = max_workers
+        self.semaphore: asyncio.Semaphore = asyncio.Semaphore(max_workers)
 
-    async def process_message_batch(self, messages_batch, start_of_n_days_ago, end_of_today, extract_all):
+    async def process_message_batch(self, messages_batch, start_of_n_days_ago:int, end_of_today:int, extract_all:bool)->defaultdict[list]:
         """Procesa un lote de mensajes en paralelo"""
         async with self.semaphore:
             batch_data = defaultdict(list)
@@ -90,7 +90,7 @@ class ScraperT:
             
             return batch_data
 
-    async def download_photo(self, message):
+    async def download_photo(self, message)-> str:
         """Descarga una foto y devuelve la ruta relativa"""
         try:
             dt = message.date
@@ -224,7 +224,7 @@ class ScraperT:
             
             await self.save_data_parallel(monthly_data)
 
-    async def save_data_parallel(self, monthly_data):
+    async def save_data_parallel(self, monthly_data:dict)->None:
         """Guarda los datos en archivos usando hilos para operaciones I/O"""
         def save_file(year_month, msgs):
             try:
